@@ -81,9 +81,7 @@ Pygments==2.17.2
 pyparsing==3.1.2
 pyTelegramBotAPI==4.18.1
 python-dateutil==2.9.0.post0
-python-dotenv @ file:///home/conda/feedstock_root/build_artifacts/python-dotenv-split_1706018097647/work
 pytz==2024.1
-pywin32==306
 PyYAML==6.0.1
 pyzmq==25.1.2
 regex==2024.5.15
@@ -101,7 +99,6 @@ tbb==2021.12.0
 tensorboard==2.16.2
 tensorboard-data-server==0.7.2
 tensorflow==2.16.1
-tensorflow-intel==2.16.1
 tensorflow-io-gcs-filesystem==0.31.0
 termcolor==2.4.0
 threadpoolctl==3.5.0
