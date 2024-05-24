@@ -1,32 +1,30 @@
 import os
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 import telebot
-import sys
-from fashion_clip.fashion_clip import FashionCLIP
-import pandas as pd
 import numpy as np
-from PIL import Image
-import pickle
+from keras.models import load_model
+from keras.preprocessing import image
 
 
 print("Starting...")
-load_dotenv()
+# load_dotenv()
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 bot = telebot.TeleBot(BOT_TOKEN)
 
 
 print("Loading the model...")
-subset = pd.read_csv('model/subset_data.csv')
-text_embeddings = np.load('model/text_embeddings.npy')
-
-
-# load fclip
-fclip = FashionCLIP('fashion-clip')
-
-# with open('model/fclip.pkl', 'rb') as inp:
-#     fclip = pickle.load(inp)
-
-# end load fclip
+model = load_model('model/vgg16_model.h5')
+classes = ['dress',
+            'hat',
+            'longsleeve',
+            'outwear',
+            'pants',
+            'shirt',
+            'shoes',
+            'shorts',
+            'skirt',
+            't-shirt']
+print("Model loaded!")
 
 
 images_dir = 'images'
@@ -49,7 +47,7 @@ def get_image(message):
             new_file.write(downloaded_file)
             new_file.close()
 
-        raw_description = describe_image(src)
+        raw_description = classify(src)
         response = format_response(raw_description)
         bot.reply_to(message, response)
 
@@ -68,7 +66,7 @@ def get_document(message):
             new_file.write(downloaded_file)
             new_file.close()
 
-        raw_description = describe_image(src)
+        raw_description = classify(src)
         response = format_response(raw_description)
         bot.reply_to(message, response)
 
@@ -76,25 +74,19 @@ def get_document(message):
         bot.reply_to(message, e)
 
 
-def format_response(tuple):
-    return f"This item's group is {tuple[0]}, type is {tuple[2]}, color is {tuple[3]}\nThe description of the closest matching product is \"{tuple[1]}\""
+def format_response(_class):
+    return f"The detected clothes class is {_class}"
 
 
-def describe_image(image_path):
-    image = Image.open(image_path)
-
-    image_embedding = fclip.encode_images([image], 1)
-    image_embedding = image_embedding/np.linalg.norm(image_embedding, ord=2, axis=-1, keepdims=True)
-    id_of_matched_object = np.argmax(image_embedding.dot(text_embeddings.T))
-    matched_object = subset.iloc[id_of_matched_object]
-
-    return(
-        matched_object['product_group_name'], 
-        matched_object['detail_desc'],
-        matched_object['product_type_name'],
-        matched_object['colour_group_name'], 
-        matched_object['article_id'], 
-        )
+def classify(image_path):
+    print(f"Processing the image {image_path}")
+    image_data = image.load_img(image_path, color_mode ='rgb', target_size = (224, 224))
+    image_data = image.img_to_array(image_data)
+    image_data = np.expand_dims(image_data, axis = 0)
+    result = model.predict(image_data)
+    res = np.argmax(result)
+    print("Image processed!")
+    return classes[res]
 
 
 print("Listening to requests...")
